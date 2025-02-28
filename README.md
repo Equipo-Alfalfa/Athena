@@ -1,4 +1,4 @@
-# fraud-eureka
-Detector de  transacciones fraudulentas en tarjetas de credito
+# Asistente basado en LLM para cyberseguridad usando Bert 
 
-Special thanks to Aman Chauhan on https://www.kaggle.com/whenamancodes for the dataset!
+
+Special thanks to Samay Ashar on https://www.kaggle.com/samayashar for the dataset!
