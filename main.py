@@ -2,7 +2,7 @@
 from transformers import BertTokenizer
 import pandas as pd
 import tensorflow as tf 
-from tensorflo.keras import layers, models
+from tensorflow.keras import layers, models
 # EL codigo esta modularizado en distintas funciones que me gustaria
 # exportar a un modulo para tener un proyecto escalable, mantenible y legible
 
