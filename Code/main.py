@@ -41,9 +41,9 @@ def token_data(texts, tokenizer, max_length=512):
 
 def create_model(inputs, num):
     model = models.Sequential()
-    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=input))
+    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=inputs))
     model.add(layers.MaxPooling1D(pool_size=2))
-    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=input))
+    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=inputs))
     model.add(layers.MaxPooling1D(pool_size=2))
     model.add(layers.Flatten())
     model.add(layers.Dense(128, activation = 'relu'))
@@ -70,7 +70,7 @@ def main():
     num = y_train.shape[1]
     model = create_model(inputs, num)
 
-    model.compile(optimizer='adam', loss='categorical_crossentroppy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     model.fit(train_encodings['input_ids'],y_train,epochs=5, batch_size=32, validation_data=(val_encodings['input_ids'],y_test))
 
 if __name__ == "__main__":
