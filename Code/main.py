@@ -41,9 +41,9 @@ def token_data(texts, tokenizer, max_length=512):
 
 def create_model(inputs, num):
     model = models.Sequential()
-    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=input))
+    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=inputs))
     model.add(layers.MaxPooling1D(pool_size=2))
-    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=input))
+    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=inputs))
     model.add(layers.MaxPooling1D(pool_size=2))
     model.add(layers.Flatten())
     model.add(layers.Dense(128, activation = 'relu'))
