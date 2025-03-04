@@ -70,7 +70,7 @@ def main():
     num = y_train.shape[1]
     model = create_model(inputs, num)
 
-    model.compile(optimizer='adam', loss='categorical_crossentroppy', metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     model.fit(train_encodings['input_ids'],y_train,epochs=5, batch_size=32, validation_data=(val_encodings['input_ids'],y_test))
 
 if __name__ == "__main__":
