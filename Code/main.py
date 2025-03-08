@@ -12,18 +12,19 @@ def main():
     print("data loaded")
     #LABEL
     df = labeler(df) 
-
+    print("labelled")
     # SPLIT
     x_train, x_test, y_train, y_test = split_data(df)
-
+    print("splitted")
     # TOKENIZE
     train_texts = x_train.tolist()  
     val_texts = x_test.tolist()  
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     train_encodings = token_data(train_texts, tokenizer)
     val_encodings = token_data(val_texts,tokenizer)
-    
+    print("tokenized")
     # Actually training the model
+    print("test",y_test.value_counts(),"train" ,y_train.value_counts())
     y_train = pd.get_dummies(y_train).values
     y_test = pd.get_dummies(y_test).values
     inputs = (train_encodings['input_ids'].shape[1], 1) 
@@ -31,12 +32,13 @@ def main():
     print("creando modelo")
     model = create_model(inputs, num)
 
+
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    model.fit(train_encodings['input_ids'],y_train,epochs=5, batch_size=32, validation_data=(val_encodings['input_ids'],y_test))
-#    y_pred =[] # reemplazar
-#    y_true = [] # reemplazar 
-#    metrics = performance(y_true, y_pred)
-#    print(metrics)
+    model.fit(train_encodings['input_ids'],y_train,epochs=10, batch_size=32, validation_data=(val_encodings['input_ids'],y_test))
+    #y_pred =[] # reemplazar
+    #y_true = [] # reemplazar 
+    #metrics = performance(y_true, y_pred)
+    #print(metrics)
 
 
 if __name__ == "__main__":

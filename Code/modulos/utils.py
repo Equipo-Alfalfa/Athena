@@ -4,7 +4,6 @@ def categorize(text):
         "phishing": "Phishing",
         "ransomware": "Ransomware",
         "trojan": "Trojan",
-        "adware": "Adware",
         "worm": "Worm",
         "spyware": "Spyware",
         "ddos": "DDoS",
