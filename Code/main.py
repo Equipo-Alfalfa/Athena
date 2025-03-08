@@ -7,10 +7,11 @@ import modulos.limpieza as clean_data
 import modulos.load_data as ldata
 def main():
     # LOAD
-    df = clean_data.limpieza(ldata.ldata1(), ldata.ldata2(), ldata.ldata3())
-
+    #df = clean_data.limpieza(ldata.ldata1(), ldata.ldata2(), ldata.ldata3())
+    df = pd.read_csv('./datasets/clean_data.csv')
+    print("data loaded")
     #LABEL
-    df = labeler(df)
+    df = labeler(df) 
 
     # SPLIT
     x_train, x_test, y_train, y_test = split_data(df)
@@ -27,6 +28,7 @@ def main():
     y_test = pd.get_dummies(y_test).values
     inputs = (train_encodings['input_ids'].shape[1], 1) 
     num = y_train.shape[1]
+    print("creando modelo")
     model = create_model(inputs, num)
 
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
