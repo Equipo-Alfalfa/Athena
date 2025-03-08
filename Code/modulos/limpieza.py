@@ -1,5 +1,6 @@
 def limpieza(df, df2, df3):
     import pandas as pd
+    import re
     
     #Eliminar filas en blanco
     df_dropped = df.dropna().sum()
@@ -32,9 +33,12 @@ def limpieza(df, df2, df3):
     Data_clean =Data_clean.drop(columns=["Unnamed: 0"])
 
     #eliminar caracteres invisibles
-    caracteres = ["\n", "\t", "\r", "@, #, $, %, ^, &, *, (, ), _, +, =, {, }, [, ], |, \, :, ;, <, >, /, ?, ., ,, !, ¡, ¿, ?, -, _, "]
-    for caracter in caracteres:
-        Data_clean["text"] = Data_clean["text"].str.replace(caracter, "")
+    invisible_characters = ["\n", "\t", "\r"]
+    special_characters = ["@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "=", "{", "}", "[", "]", "|", "\\", ":", ";", "<", ">", "/", "?", ".", ",", "!", "¡", "¿", "-", "_"]
+    all_characters = invisible_characters + special_characters
+
+    for character in all_characters:
+        Data_clean["text"] = Data_clean["text"].replace(all_characters, "")
     
     #regresa la data a la funcion que la necesita
     print(Data_clean.count())

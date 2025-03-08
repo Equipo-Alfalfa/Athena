@@ -31,13 +31,17 @@ def performance(y_true,y_pred):
     }
 
 
-def create_model(inputs, num):
+def create_model(inputs, num,  num_filters=128, kernel_size=5, pool_size=2):
     model = models.Sequential()
-    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=inputs))
-    model.add(layers.MaxPooling1D(pool_size=2))
-    model.add(layers.Conv1D(128, 5, activation='relu', input_shape=inputs))
-    model.add(layers.MaxPooling1D(pool_size=2))
+    model.add(layers.Conv1D(num_filters, kernel_size, activation='gelu', input_shape=inputs))
+    model.add(layers.MaxPooling1D(pool_size=pool_size))
+    model.add(layers.BatchNormalization())
+    model.add(layers.Conv1D(num_filters * 2, kernel_size, activation='gelu'))
+    model.add(layers.MaxPooling1D(pool_size=pool_size))
+    model.add(layers.BatchNormalization())
+    model.add(layers.GlobalAveragePooling1D())
     model.add(layers.Flatten())
-    model.add(layers.Dense(128, activation = 'relu'))
+    model.add(layers.Dropout(0.5))
+    model.add(layers.Dense(128, activation = 'gelu'))
     model.add(layers.Dense(num,activation = 'softmax'))
     return model

@@ -1,15 +1,13 @@
  # Idontknowwhatimdoing.py
-"""from transformers import BertTokenizer
+from transformers import BertTokenizer
 from modulos.utils import  labeler
 from modulos.model import split_data, token_data, create_model, performance
 import pandas as pd
-import modulos.limpieza as load_clean
-import modulos.load_data as data"""
-import modulos.limpieza as load_clean
-import modulos.load_data as data
-"""def main():
+import modulos.limpieza as clean_data
+import modulos.load_data as ldata
+def main():
     # LOAD
-    df = load_clean(data.ldata1(), data.ldata2(), data.ldata3())
+    df = clean_data.limpieza(ldata.ldata1(), ldata.ldata2(), ldata.ldata3())
 
     #LABEL
     df = labeler(df)
@@ -33,13 +31,11 @@ import modulos.load_data as data
 
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
     model.fit(train_encodings['input_ids'],y_train,epochs=5, batch_size=32, validation_data=(val_encodings['input_ids'],y_test))
-    y_pred =[] # reemplazar
-    y_true = [] # reemplazar 
-    metrics = performance(y_true, y_pred)
-    print(metrics)
-"""
+#    y_pred =[] # reemplazar
+#    y_true = [] # reemplazar 
+#    metrics = performance(y_true, y_pred)
+#    print(metrics)
 
-datalimpia = load_clean.limpieza(data.ldata1(), data.ldata2(), data.ldata3())
-datalimpia.to_csv("datasets/clean_data.csv", index=False)
-print(datalimpia.count())
-print(datalimpia.head())
+
+if __name__ == "__main__":
+    main()
