@@ -3,8 +3,8 @@ from transformers import BertTokenizer
 from modulos.utils import  labeler
 from modulos.model import split_data, token_data, create_model, performance
 import pandas as pd
-import modulos.limpieza as clean_data
-import modulos.load_data as ldata
+#import modulos.limpieza as clean_data
+#import modulos.load_data as ldata
 def main():
     # LOAD
     #df = clean_data.limpieza(ldata.ldata1(), ldata.ldata2(), ldata.ldata3())
