@@ -1,6 +1,5 @@
 import sys
 from ia_handler import IAHandler
-
 from PySide6.QtWidgets import (QApplication, QMainWindow,
 QPushButton, QLabel, QVBoxLayout, QWidget, QLineEdit)
 from PySide6.QtUiTools import QUiLoader
@@ -12,28 +11,21 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         self.setWindowTitle("Athena - Panel principal")
+        self.setGeometry (100, 100, 400, 300)
 
         #No estoy segura si esto funciona----------------------------
         self.ia_handler = IAHandler()
 
         self.cargar_boton = QPushButton('Cargar Modelo', self)
         self.cargar_boton.clicked.connect(self.cargar_modelo)
-        layout.addWidget(self.cargar_boton)
 
         self.datos_input = QLineEdit(self)
-        layout.addWidget(self.datos_input)
 
         self.predecir_boton = QPushButton('Hacer Predicción', self)
         self.predecir_boton.clicked.connect(self.hacer_prediccion)
-        layout.addWidget(self.predecir_boton)
 
         self.resultado_label = QLabel('Resultado:', self)
-        layout.addWidget(self.resultado_label)
-
-        container = QWidget()
-        container.setLayout(layout)
-        self.setCentralWidget(container)
-
+    
     def cargar_modelo(self):
         self.ia_handler.cargar_modelo()
         self.resultado_label.setText('Modelo cargado correctamente.')
@@ -60,6 +52,10 @@ class MainWindow(QMainWindow):
 
         layout = QVBoxLayout()
         layout.addWidget(self.ui)
+        layout.addWidget(self.cargar_boton)
+        layout.addWidget(self.datos_input)
+        layout.addWidget(self.predecir_boton)
+        layout.addWidget(self.resultado_label)
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
