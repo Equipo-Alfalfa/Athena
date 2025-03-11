@@ -1,6 +1,37 @@
-import tensorflow as tf
-from transformers import TFBertModel, BertTokenizer
 import pandas as pd
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import MultiLabelBinarizer
+from sklearn.model_selection import train_test_split
+from transformers import BertTokenizer, TFBertForSequenceClassification
+import tensorflow as tf
+from tensorflow.keras.callbacks import EarlyStopping
+
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+def preprocess_text(text):
+    text = text.lower()
+    text = re.sub(r'[^\w\s]', '', text)  # Remove punctuation
+    stop_words = set(stopwords.words('english'))  # English stopwords
+    words = [word for word in text.split() if word not in stop_words]
+    lemmatizer = WordNetLemmatizer()
+    words = [lemmatizer.lemmatize(word) for word in words]
+    return " ".join(words)
+
+def preprocess_data(df, text_column='text'):
+    df[text_column] = df[text_column].apply(preprocess_text)
+    return df
+
+def binarize(df,label_column = 'label'):
+    mlb = MultiLabelBinarizer()
+    labels = mlb.fit_transform(df[label_column])
+    labels_df = pd.DataFrame(labels, columns=mlb.classes_)
+    return labels_df, mlb
 
 # RECORRER TEXTO PARA CREAR CATEGORIAS 
 def categorize(text):
@@ -35,18 +66,28 @@ def categorize(text):
 
 # PARAMETROS DE TOKENIZACION Y ETIQUETADO
 def prepare_data(df, tokenizer, max_length=512):
-    # APLICAR ETIQUETAS LLAMANDO A CATEGORIZE
-    df["label"] = df["text"].apply(categorize) 
-    # TOKENIZAR
+    df["label"] = df["text"].apply(categorize)
+    mlb = MultiLabelBinarizer()
+    labels = mlb.fit_transform(df["label"])
     encodings = tokenizer(
-        df,
+        df["text"].tolist(),
         truncation=True,
         padding=True,
         max_length=max_length,
-        return_tensors='tf' 
+        return_tensors='tf'
     )
-    return encodings, df["label"].tolist()
+    return encodings, labels, mlb
 
+def tokenize_data(tokenizer, texts, max_length=128):
+    encodings = tokenizer(
+        texts.tolist(), padding=True, truncation=True, max_length=max_length, return_tensors='tf'
+    )
+    return encodings
+
+def create_tf_datasets(train_encodings, y_train, val_encodings, y_test, batch_size=16):
+    train_dataset = tf.data.Dataset.from_tensor_slices((dict(train_encodings), y_train)).shuffle(1000).batch(batch_size)
+    val_dataset = tf.data.Dataset.from_tensor_slices((dict(val_encodings), y_test)).batch(batch_size)
+    return train_dataset, val_dataset
 
 # CARGAR MODELO PRE ENTRENADO Y TOKENIZADOR
 def create_bert(model_name= 'bert-base-uncased'):
@@ -54,40 +95,18 @@ def create_bert(model_name= 'bert-base-uncased'):
     tokenizer = BertTokenizer.from_pretrained(model_name)
     return model, tokenizer
 
+def split_data(df, labels_df, test_size=0.2, random_state=42):
+    x_train, x_test, y_train, y_test = train_test_split(
+        df['text'], labels_df, test_size=test_size, random_state=random_state
+    )
+    return x_train, x_test, y_train, y_test
 
-def split_data(df, labels):
-    from sklearn.model_selection import train_test_split
-    import tensorflow as tf
-    x = df['text'] 
-    y = labels
-    return train_test_split(x,y,test_size = 0.2,random_state=35)
-
-
-def tune_bert(df, labels):
-    from sklearn.model_selection import train_test_split
-    from transformers import TFBertForSequenceClassification
-    x_train, x_test, y_train, y_test = split_data(df, labels)
-    
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-
-    def tokenize_function(text):
-        return tokenizer(text, padding=True, truncation=True, max_length=128, return_tensors='tf')
-    
-    train_encodings = tokenize_function(x_train)
-    val_encodings = tokenize_function(x_test)
-
-    model = TFBertForSequenceClassification.from_pretrained('bert-base-uncased')
-    
-    train_dataset = tf.data.Dataset.from_tensor_slices((dict(model(train_encodings)), y_train)).shuffle(100).batch(32)
-    val_dataset = tf.data.Dataset.from_tensor_slices((dict(model(val_encodings)), y_test)).batch(16)
-    
+def tune_bert(train_dataset, val_dataset, model_name='bert-base-uncased', num_labels=None, epochs=5):
+    model = TFBertForSequenceClassification.from_pretrained(model_name, num_labels=num_labels)
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    
-    model.fit(train_dataset, validation_data=val_dataset, epochs=5)
-
-    model.save_pretrained('tuned_bert_model')
-    tokenizer.save_pretrained('tuned_bert_tokenizer')
-
+    early_stopping = EarlyStopping(monitor='val_loss', patience=3)
+    model.fit(train_dataset, validation_data=val_dataset, epochs=epochs, callbacks=[early_stopping])
+    return model
 
 # CREAR RED CONVOLUCIONADA
 def create_cnn(bert_model, num_labels):
@@ -98,42 +117,37 @@ def create_cnn(bert_model, num_labels):
 
     x = tf.keras.layers.Conv1D(filters=128,kernel_size=3, activation = 'relu')(x)
     x = tf.keras.layers.MaxPooling1D(pool_size=2)(x)
-    x = tf.keras.layers.Conv1D(filers = 64, kernel_size=3, activation = 'relu')(x)
+    x = tf.keras.layers.Conv1D(filters = 64, kernel_size=3, activation = 'relu')(x)
     x = tf.keras.layers.MaxPooling1D(pool_size=2)(x)
 
-    x = tf.keras.layers.GlobalMaxPooling1D()(x)
+    x = tf.keras.layers.GlobalAveragePooling1D()(x)
 
     x = tf.keras.layers.Dense(64, activation='relu')(x)
-    outputs = tf.keras.layers.Dense(num_labels, activation='softmax')(x)
+    outputs = tf.keras.layers.Dense(num_labels, activation='sigmoid')(x)
     
     model = tf.keras.Model(inputs=[input_ids, attention_mask], outputs=outputs)
     return model
 
-    
-#example of main
-def main():
-    # CARGAR DATA
-    df = pd.read_csv('datasets/clean_data.csv')
-    # CARGAR TOKENIZADOR Y MODELO PREENTRENADO
-    model, tokenizer = create_bert(model_name='bert-base-uncased')
-    # CANTIDAD DE ETIQUETAS QUE TIENE EL DF
-    num_labels = 16 # this can change if you add or substract categories from categorize()
-    # CREAR MODELO CONVOLUCIONADO
-    cnn_model = create_cnn(model,num_labels)
-    # EMPEZAR A TOKENIZAR UTILIZA TOKENIZADOR PRE ENTRENADO
-    encodings,labels = prepare_data(df, tokenizer)
-    # SE GUARDAN EN UN DATASET DE TENSORFLOW
-    dataset = tf.data.Dataset.from_tensor_slices(({
-        'input_ids': encodings['input_ids'],
-        'attention_mask': encodings['attention_mask']    
-    }, labels))
-    
-    dataset.batch(32)
-    # COMPILAR MODELO    
-    cnn_model.compile(optimizer= 'adam',loss= 'sparse_categorical_crossentropy', metrics= ['accuracy'])
-    # INICIAR ENTRENAMIENTO DE MODELO
-    cnn_model.fit(dataset, epochs=5)
+def train_mixed_model(model,train_dataset,val_dataset, epochs= 10, patience = 3):
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    early_stopping = EarlyStopping(monitor='val_loss',patience=patience)
+    history = model.fit(train_dataset,validation_data = val_dataset, epochs=epochs, callbacks=[early_stopping])
+    return history
 
-# LLAMAR FUNCION MAIN
-#if __name__ == "__main__":
-#    main()
+#example of main.py
+def main():
+    df = pd.read_csv('datasets/labelled_data.csv')
+    df = preprocess_data(df)
+    labels_df, mlb = binarize(df)
+    x_train, x_test, y_train, y_test = split_data(df, labels_df)
+    bert_model, tokenizer = create_bert()
+    train_encodings = tokenize_data(tokenizer, x_train)
+    val_encodings = tokenize_data(tokenizer, x_test)
+
+    train_dataset, val_dataset = create_tf_datasets(train_encodings, y_train, val_encodings, y_test)
+    tuned_bert = tune_bert(train_dataset, val_dataset,num_labels=labels_df.shape[1])
+    cnn_model = create_cnn(bert_model, num_labels=labels_df.shape[1])
+    history = train_combined_model(cnn_model, train_dataset, val_dataset)
+    cnn_model.save('bert_cnn_cybersecurity_model')
+    print("mierda entrenada")
+main()

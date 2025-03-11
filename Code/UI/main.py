@@ -1,35 +1,88 @@
 import sys
+from ia_handler import IAHandler
 
 from PySide6.QtWidgets import (QApplication, QMainWindow,
-QPushButton)
+QPushButton, QLabel, QVBoxLayout, QWidget, QLineEdit)
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile
+from PySide6.QtCore import QFile, QIODevice
+import chat
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        # Cargar el archivo .ui
+        self.setWindowTitle("Athena - Panel principal")
+
+        #No estoy segura si esto funciona----------------------------
+        self.ia_handler = IAHandler()
+
+        self.cargar_boton = QPushButton('Cargar Modelo', self)
+        self.cargar_boton.clicked.connect(self.cargar_modelo)
+        layout.addWidget(self.cargar_boton)
+
+        self.datos_input = QLineEdit(self)
+        layout.addWidget(self.datos_input)
+
+        self.predecir_boton = QPushButton('Hacer Predicción', self)
+        self.predecir_boton.clicked.connect(self.hacer_prediccion)
+        layout.addWidget(self.predecir_boton)
+
+        self.resultado_label = QLabel('Resultado:', self)
+        layout.addWidget(self.resultado_label)
+
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+    def cargar_modelo(self):
+        self.ia_handler.cargar_modelo()
+        self.resultado_label.setText('Modelo cargado correctamente.')
+
+    def hacer_prediccion(self):
+        datos_entrada = self.datos_input.text()
+        prediccion = self.ia_handler.predecir(datos_entrada)
+        self.resultado_label.setText(f'Resultado: {prediccion}')
+     #-------------------------------------------------------------
+
         loader = QUiLoader()
-        file = QFile("MainUi.ui")
-        file.open(QFile.ReadOnly)
+        file = QFile("Code/UI/ui/main.ui")
+
+        if not file.open(QIODevice.ReadOnly):
+            print(f"No se puede abrir el archivo: {file.errorString()}")
+            exit(-1)
         
-        # Cargar la interfaz en la ventana principal
         self.ui = loader.load(file, self)
         file.close()
 
+        if not self.ui:
+            print(loader.errorString())
+            exit(-1) 
 
-        # Establecer la interfaz cargada como la ventana central
-        self.setCentralWidget(self.ui)
-
-        # Conectar los botones a sus funciones
+        layout = QVBoxLayout()
+        layout.addWidget(self.ui)
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
         self.setup_connections()
 
+
+
+#Conexiónes
     def setup_connections(self):
+        btn_chat = self.ui.findChild(QPushButton, 'btn_chat')
+        btn_chat.clicked.connect(self.chat_window)
+        btn_est = self.ui.findChild(QPushButton, 'btn_est')
+        btn_est.clicked.connect(self.est_window)
         pass
-    def btn_chat_clicked(self):
-        pass
-        
+
+    def chat_window(self):
+       
+        #self.hide()
+        pass 
+    def est_window(self):
+        print("¡Botón de estadísticas presionado!")
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
