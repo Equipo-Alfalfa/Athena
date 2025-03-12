@@ -110,7 +110,40 @@ def create_cnn(bert_model, num_labels):
     return model
 
     
+<<<<<<< Updated upstream
 #example of main
+=======
+def categorizar(df):
+    subtemas_palabras_clave, umbrales_personalizados = load_config()
+
+    # Vectorize corpus
+    vectorizer = TfidfVectorizer()
+    corpus = df["text"].tolist()  # List of all texts
+    vectorizer.fit(corpus)
+
+    # Apply categorization to each article
+    df["label"] = df["text"].apply(
+        lambda x: categorizar_articulo_subtemas_en(x, subtemas_palabras_clave, vectorizer, umbrales_personalizados, top_n=3)
+    )
+
+    # Save the DataFrame with the new labels
+    df.to_csv("labelled_data.csv", index=False, encoding='utf-8')
+    print("Categorización completada. Archivo guardado como labelled_data.csv")
+def evalua_model(model, val_dataset, mlb):
+    y_true = []
+    y_pred = []
+    for batch in val_dataset:
+        X, y = batch
+        y_true.extend(y.numpy())
+        y_pred.extend(model.predict(X).numpy())
+    
+    y_true = mlb.inverse_transform(y_true)
+    y_pred = mlb.inverse_transform(y_pred)
+    
+    print(classification_report(y_true, y_pred))
+
+#example of main.py
+>>>>>>> Stashed changes
 def main():
     # CARGAR DATA
     df = pd.read_csv('datasets/clean_data.csv')

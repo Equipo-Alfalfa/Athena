@@ -1,9 +1,10 @@
 import sys
-from ia_handler import IAHandler
+#from ia_handler import IAHandler
 from PySide6.QtWidgets import (QApplication, QMainWindow,
 QPushButton, QLabel, QVBoxLayout, QWidget, QLineEdit)
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, QIODevice
+import ia_handler as IAHandler
 import chat
 
 class MainWindow(QMainWindow):

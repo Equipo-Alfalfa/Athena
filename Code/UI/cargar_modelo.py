@@ -1,5 +1,5 @@
 import tensorflow as tf
 
 def cargar_modelo():
-    modelo = tf.keras.models.load_model('mi_modelo.h5') #<<<<<<<<<< Cambiar nombre
+    modelo = tf.keras.models.load_model('\..\model\saved_model.pb')
     return modelo

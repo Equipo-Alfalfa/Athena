@@ -6,7 +6,7 @@ class IAHandler:
         self.modelo = None
 
     def cargar_modelo(self):
-        self.modelo = tf.keras.models.load_model('mi_modelo.h5') #<<<<<<<<<< Cambiar nombre
+        self.modelo = tf.keras.models.load_model('\..\model\saved_model.pb')
 
     def predecir(self, datos_entrada):
         datos = np.array([float(x) for x in datos_entrada.split(',')])
