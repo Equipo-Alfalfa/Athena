@@ -71,7 +71,7 @@ def tune_bert(df, labels):
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
     def tokenize_function(text):
-        return tokenizer(text, padding=True, truncation=True, max_length=128, return_tensors='tf')
+        return  tokenizer(text, padding=True, truncation=True, max_length=128, return_tensors='tf')
     
     train_encodings = tokenize_function(x_train)
     val_encodings = tokenize_function(x_test)
